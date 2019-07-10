@@ -75,19 +75,19 @@ class Blockchain(object):
     def last_block(self):
         return self.chain[-1]
 
-    def proof_of_work(self, last_proof):
-        """
-        Simple Proof of Work Algorithm
-        - Find a number p' such that hash(pp') contains 4 leading
-        zeroes, where p is the previous p'
-        - p is the previous proof, and p' is the new proof
-        """
+    # def proof_of_work(self, last_proof):
+    #     """
+    #     Simple Proof of Work Algorithm
+    #     - Find a number p' such that hash(pp') contains 4 leading
+    #     zeroes, where p is the previous p'
+    #     - p is the previous proof, and p' is the new proof
+    #     """
 
-        proof = 0
-        while self.valid_proof(last_proof, proof) is False:
-            proof += 1
+    #     proof = 0
+    #     while self.valid_proof(last_proof, proof) is False:
+    #         proof += 1
 
-        return proof
+    #     return proof
 
     @staticmethod
     def valid_proof(last_proof, proof):
@@ -143,32 +143,29 @@ blockchain = Blockchain()
 def mine():
     # We run the proof of work algorithm to get the next proof...
     last_block = blockchain.last_block
-    last_proof = last_block['proof']
 
-    proof = request.get_json()
-    new_proof = proof.get('proof')
-
+    values = request.get_json()
+    new_values = values['proof']
     # We must receive a reward for finding the proof.
-    if blockchain.valid_proof(last_proof, new_proof):
-        # The sender is "0" to signify that this node has mine a new coin
-        blockchain.new_transaction(
-            sender="0",
-            recipient=node_identifier,
-            amount=1,
-        )
+    # The sender is "0" to signify that this node has mine a new coin
+    blockchain.new_transaction(
+        sender="0",
+        recipient=node_identifier,
+        amount=1,
+    )
 
-        # Forge the new BLock by adding it to the chain
-        previous_hash = blockchain.hash(last_block)
-        block = blockchain.new_block(new_proof, previous_hash)
+    # Forge the new BLock by adding it to the chain
+    previous_hash = blockchain.hash(last_block)
+    block = blockchain.new_block(new_values, previous_hash)
 
-        response = {
-            'message': "New Block Forged",
-            'index': block['index'],
-            'transactions': block['transactions'],
-            'proof': block['proof'],
-            'previous_hash': block['previous_hash'],
-        }
-        return jsonify(response), 200
+    response = {
+        'message': "New Block Forged",
+        'index': block['index'],
+        'transactions': block['transactions'],
+        'proof': block['proof'],
+        'previous_hash': block['previous_hash'],
+    }
+    return jsonify(response), 200
 
 
 @app.route('/transactions/new', methods=['POST'])
