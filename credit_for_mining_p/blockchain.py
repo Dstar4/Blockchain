@@ -136,7 +136,7 @@ class Blockchain(object):
         """
         guess = f'{last_proof}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:6] == "000000"
+        return guess_hash[:5] == "00000"
 
     def valid_chain(self, chain):
         """
@@ -175,7 +175,9 @@ class Blockchain(object):
         """
 
         parsed_url = urlparse(address)
-        self.nodes.add(parsed_url.netloc)
+        print(parsed_url)
+        self.nodes.add(parsed_url.path)
+        print("nodes", self.nodes)
 
     def resolve_conflicts(self):
         """
@@ -213,17 +215,19 @@ class Blockchain(object):
 
     def broadcast_new_block(self, block):
         """
-        Alert neigbors in list of nodes that a new block has been mined
-        :param block: <Block> the block that has been mined and added to the 
+        Alert neighbors in list of nodes that a new block has been mined
+        :param block: <Block> the block that has been mined and added to the
         chain
         """
-        neighbours = self.nodes
+        neighbors = self.nodes
+        print("\n\nneighbors\n", neighbors)
 
         post_data = {"block": block}
 
         # Grab and verify the chains from all the nodes in our network
-        for node in neighbours:
-            response = requests.post(f'http://{node}/block/new',
+        for node in neighbors:
+            print(f'NODE\n{node}\n')
+            response = requests.post(f'{node}/block/new',
                                      json=post_data)
 
             if response.status_code != 200:
@@ -249,12 +253,14 @@ def mine():
 
     values = request.get_json()
     submitted_proof = values.get('proof')
+    id = values.get('id')
+    print(id)
 
     if blockchain.valid_proof(last_proof, submitted_proof):
         # We must receive a reward for finding the proof.
         # The sender is "0" to signify that this node has mine a new coin
         blockchain.new_transaction(
-            sender="0",
+            sender=id,
             recipient=node_identifier,
             amount=1,
         )
@@ -292,6 +298,12 @@ def new_block():
     if not all(k in values for k in required):
         return 'Missing Values', 400
 
+
+#             'index': 1,
+#             'timestamp': 0,
+#             'transactions': [],
+#             'proof': 99,  # 99 is faster for 1st proof gen
+#             'previous_hash': 1,
     # TODO: Verify that the sender is one of our peers
 
     # Check that the new block index is 1 higher than our last block

@@ -1,6 +1,6 @@
 import hashlib
 import requests
-
+import uuid
 import sys
 
 
@@ -28,7 +28,7 @@ def valid_proof(last_proof, proof):
     """
     guess = f'{last_proof}{proof}'.encode()
     guess_hash = hashlib.sha256(guess).hexdigest()
-    return guess_hash[:6] == "000000"
+    return guess_hash[:5] == "00000"
 
 
 if __name__ == '__main__':
@@ -37,16 +37,40 @@ if __name__ == '__main__':
         node = int(sys.argv[1])
     else:
         node = "http://localhost:5000"
+    id = ''
+    try:
+        with open("my_id.txt") as f:
 
+            # print(f.read())
+            id = f.read()
+            f.close()
+    except:
+        tmp = list(str(uuid.uuid1()))
+        # n_tmp = tmp.split('')
+        print(f"\nTMP\n\n{tmp}\n\n")
+        for i in tmp:
+            if i == "-":
+                print("here")
+                tmp.remove(i)
+
+            id = ''.join(tmp)
+            print(f"\nTMP\n\n{tmp}\n\n")
+            with open("my_id.txt", 'w') as f:
+                f.write(id)
+                f.close
+
+        print(f"\nID\n\n{id}\n\n")
     coins_mined = 0
     # Run forever until interrupted
     while True:
+
         # Get the last proof from the server
         r = requests.get(url=node + "/last_proof")
         data = r.json()
         new_proof = proof_of_work(data.get('proof'))
 
-        post_data = {"proof": new_proof}
+        print(id)
+        post_data = {"proof": new_proof, "id": id}
 
         r = requests.post(url=node + "/mine", json=post_data)
         data = r.json()
